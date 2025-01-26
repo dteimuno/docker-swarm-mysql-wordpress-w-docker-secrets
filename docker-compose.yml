@@ -1,1 +1,71 @@
+version: '3.8'
 
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - 80:80
+    secrets:
+      - wordpressdbhost
+      - wordpressdbuser
+      - wordpressdbpassword
+      - wordpressdbname
+    environment:
+      WORDPRESS_DB_HOST_FILE: /run/secrets/wordpressdbhost
+      WORDPRESS_DB_USER_FILE: /run/secrets/wordpressdbuser 
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/wordpressdbpassword
+      WORDPRESS_DB_NAME_FILE: /run/secrets/wordpressdbname
+    deploy:
+      replicas: 3
+    networks:
+      - frontend
+      - backend
+
+  wordpress-mysql:
+    image: mysql:latest
+    secrets:
+      - mysqlrootpassword
+      - mysqldatabase
+      - mysqluser
+      - mysqlpassword
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysqlrootpassword
+      MYSQL_DATABASE_FILE: /run/secrets/mysqldatabase
+      MYSQL_USER_FILE: /run/secrets/mysqluser
+      MYSQL_PASSWORD_FILE: /run/secrets/mysqlpassword
+    volumes:
+      - mysqlvolume:/var/lib/mysql
+    deploy:
+      replicas: 1
+    depends_on:
+      - wordpress
+    networks:
+      - backend
+
+volumes:
+  mysqlvolume:
+    driver: local
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
+
+secrets:
+  wordpressdbhost:
+    external: true
+  wordpressdbuser:
+    external: true
+  wordpressdbpassword:
+    external: true
+  wordpressdbname:
+    external: true
+  mysqlrootpassword:
+    external: true
+  mysqldatabase:
+    external: true
+  mysqluser:
+    external: true
+  mysqlpassword:
+    external: true
